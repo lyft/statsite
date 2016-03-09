@@ -260,10 +260,6 @@ class TestInteg(object):
         out = open(output).read()
 
         # Adjust for time drift
-        if format_output(now - 1, "g1", BIN_TYPES["g"], VAL_TYPE_MAP["kv"], 200) in out:
-            now = now - 1
-
-        assert format_output(now, "g1", BIN_TYPES["g"], VAL_TYPE_MAP["kv"], 200) in out
         assert format_output(now, "g1", BIN_TYPES["g"], VAL_TYPE_MAP["sum"], 900) in out
         assert format_output(now, "g1", BIN_TYPES["g"], VAL_TYPE_MAP["mean"], 300) in out
 
@@ -384,10 +380,6 @@ class TestIntegPrefix(object):
 
 
         # Adjust for time drift
-        if format_output(now - 1, "g1", BIN_TYPES["g"], VAL_TYPE_MAP["kv"], 300) in out:
-            now = now - 1
-
-        assert format_output(now, "gauges.g1", BIN_TYPES["g"], VAL_TYPE_MAP["kv"], 300) in out
         assert format_output(now, "gauges.g1", BIN_TYPES["g"], VAL_TYPE_MAP["sum"], 900) in out
         assert format_output(now, "gauges.g1", BIN_TYPES["g"], VAL_TYPE_MAP["mean"], 300) in out
 

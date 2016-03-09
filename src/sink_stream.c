@@ -68,7 +68,6 @@ static int stream_formatter_bin(FILE *pipe, void *data, metric_type type, char *
             break;
 
         case GAUGE:
-            STREAM_BIN(BIN_TYPE_GAUGE, BIN_OUT_NO_TYPE, gauge_value(value));
             STREAM_BIN(BIN_TYPE_GAUGE, BIN_OUT_SUM, gauge_sum(value));
             STREAM_BIN(BIN_TYPE_GAUGE, BIN_OUT_MEAN, gauge_mean(value));
             break;
@@ -141,7 +140,6 @@ static int stream_formatter(FILE *pipe, void *data, metric_type type, char *name
             break;
 
         case GAUGE:
-            STREAM("%s%s|%f|%lld\n", prefix, name, gauge_value(value));
             STREAM("%s%s.sum|%f|%lld\n", prefix, name, gauge_sum(value));
             STREAM("%s%s.mean|%f|%lld\n", prefix, name, gauge_mean(value));
             break;

@@ -140,7 +140,6 @@ class TestInteg(object):
         now = time.time()
         out = open(output).read()
 
-        assert "gauges.g1|5.000000|%d\n" % now in out
         assert "gauges.g1.sum|126.000000|%d\n" % now in out
         assert "gauges.g1.mean|42.000000|%d\n" % now in out
 
@@ -153,7 +152,6 @@ class TestInteg(object):
         now = time.time()
         out = open(output).read()
 
-        assert "gauges.gd|100.000000|%d\n" % now in out
         assert "gauges.gd.sum|100.000000|%d\n" % now in out
         assert "gauges.gd.mean|50.000000|%d\n" % now in out
 
@@ -166,7 +164,6 @@ class TestInteg(object):
         now = time.time()
         out = open(output).read()
 
-        assert "gauges.gd|-100.000000|%d\n" % now in out
         assert "gauges.gd.sum|-100.000000|%d\n" % now in out
         assert "gauges.gd.mean|-50.000000|%d\n" % now in out
 
@@ -236,7 +233,6 @@ class TestIntegUDP(object):
         now = time.time()
         out = open(output).read()
 
-        assert "gauges.g1|5.000000|%d\n" % now in out
         assert "gauges.g1.sum|126.000000|%d\n" % now in out
         assert "gauges.g1.mean|42.000000|%d\n" % now in out
 
@@ -248,7 +244,6 @@ class TestIntegUDP(object):
         wait_file(output)
         now = time.time()
         out = open(output).read()
-        assert "gauges.gd|100.000000|%d\n" % now in out
         assert "gauges.gd.sum|100.000000|%d\n" % now in out
         assert "gauges.gd.mean|50.000000|%d\n" % now in out
 
@@ -261,7 +256,6 @@ class TestIntegUDP(object):
         wait_file(output)
         now = time.time()
         out = open(output).read()
-        assert "gauges.gd|-100.000000|%d\n" % now in out
         assert "gauges.gd.sum|-100.000000|%d\n" % now in out
         assert "gauges.gd.mean|-50.000000|%d\n" % now in out
 
