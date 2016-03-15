@@ -91,6 +91,7 @@ static const sink_config_http DEFAULT_HTTP_SINK = {
     .oauth_secret = NULL,
     .oauth_token_url = NULL,
     .max_buffer_size = 10 * 1024 * 1024, /* 10 MB */
+    .send_backoff_ms = 0,
 };
 
 /**
@@ -319,6 +320,8 @@ static int sink_callback(void* user, const char* section, const char* name, cons
             config->oauth_token_url = strdup(value);
         } else if (NAME_MATCH("max_buffer_size")) {
             value_to_int(value, &config->max_buffer_size);
+        } else if (NAME_MATCH("send_backoff_ms")) {
+            value_to_int(value, &config->send_backoff_ms);
         } else {
             /* Attempt to locate keys
              * of the form param_PNAME */

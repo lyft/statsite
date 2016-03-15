@@ -637,6 +637,7 @@ oauth_key=hi\n\
 oauth_secret=boo\n\
 oauth_token_url=https://example.com/token\n\
 max_buffer_size=131072\n\
+send_backoff_ms=1000\n\
 \n\
 \n\
 ";
@@ -690,6 +691,7 @@ max_buffer_size=131072\n\
     fail_unless(strcmp("boo", ch->oauth_secret) == 0);
     fail_unless(strcmp("https://example.com/token", ch->oauth_token_url) == 0);
     fail_unless(ch->max_buffer_size == 131072);
+    fail_unless(ch->send_backoff_ms == 1000);
     unlink("/tmp/ss_sink_multi");
 }
 END_TEST

@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "lifoq.h"
 #include "metrics.h"
@@ -350,6 +351,12 @@ static void* http_worker(void* arg) {
         int ret = lifoq_get(s->queue, &data, &data_size);
         if (ret == LIFOQ_CLOSED)
             goto exit;
+
+        /* Delay sending stats until a fixed interval has elapsed */
+        if (httpconfig->send_backoff_ms > 0) {
+            double random_delay = drand48() * httpconfig->send_backoff_ms;
+            usleep((useconds_t)random_delay * 1000);
+        }
 
         /* Hold the sink mutex for any state, such as auth cookies,
          * which may be mutated by more than one worker. */
