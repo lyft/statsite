@@ -10,30 +10,30 @@
 #include "set.h"
 
 typedef struct key_val {
-    char *name;
-    double val;
-    struct key_val *next;
+	char *name;
+	double val;
+	struct key_val *next;
 } key_val;
 
 typedef struct {
-    timer tm;
+	timer tm;
 
-    // Support for histograms
-    histogram_config *conf;
-    unsigned int *counts;
+	// Support for histograms
+	histogram_config *conf;
+	unsigned int *counts;
 } timer_hist;
 
 typedef struct {
-    hashmap *counters;  // Hashmap of name -> counter structs
-    hashmap *timers;    // Map of name -> timer_hist structs
-    hashmap *sets;      // Map of name -> set_t structs
-    hashmap *gauges;    // Map of name -> guage struct
-    key_val *kv_vals;   // Linked list of key_val structs
-    double timer_eps;   // The error for timers
-    double *quantiles;  // Array of quantiles
-    uint32_t num_quants; // Size of quantiles array
-    radix_tree *histograms; // Radix tree with histogram configs
-    unsigned char set_precision; // The precision for sets
+	hashmap *counters;  // Hashmap of name -> counter structs
+	hashmap *timers;    // Map of name -> timer_hist structs
+	hashmap *sets;      // Map of name -> set_t structs
+	hashmap *gauges;    // Map of name -> guage struct
+	key_val *kv_vals;   // Linked list of key_val structs
+	double timer_eps;   // The error for timers
+	double *quantiles;  // Array of quantiles
+	uint32_t num_quants; // Size of quantiles array
+	radix_tree *histograms; // Radix tree with histogram configs
+	unsigned char set_precision; // The precision for sets
 } metrics;
 
 typedef int(*metric_callback)(void *data, metric_type type, char *name, void *val);
@@ -71,7 +71,7 @@ int destroy_metrics(metrics *m);
  * @arg val The sample to add
  * @return 0 on success.
  */
-int metrics_add_sample(metrics *m, metric_type type, char *name, double val);
+int metrics_add_sample(metrics *m, metric_type type, char *name, double val, double sample_rate);
 
 /**
  * Adds a value to a named set.
