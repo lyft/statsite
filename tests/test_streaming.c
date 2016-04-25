@@ -90,11 +90,7 @@ START_TEST(test_stream_some)
 	ssize_t read = fread(&buf, 1, 256, f);
 	buf[read] = 0;
 
-	char *check = "kv.test2.42.000000\n\
-		       kv.test.100.000000\n\
-		       counts.foo.10.000000\n\
-		       counts.bar.30.000000\n\
-		       timers.baz.11.000000\n";
+	char *check = "kv.test2.42.000000\nkv.test.100.000000\ncounts.foo.10.000000\ncounts.bar.30.000000\ntimers.baz.11.000000\n";
 	fail_unless(strcmp(check, (char*)&buf) == 0);
 
 	res = destroy_metrics(&m);

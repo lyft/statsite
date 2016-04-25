@@ -263,7 +263,7 @@ static int handle_ascii_client_connect(statsite_conn_handler *handle) {
 
 		// Increment the number of inputs received
 		if (GLOBAL_CONFIG->input_counter)
-			metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1, 1.0);
+			metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1, sample_rate);
 
 		// Fast track the set-updates
 		if (type == SET) {
