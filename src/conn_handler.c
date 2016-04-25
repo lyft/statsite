@@ -39,15 +39,15 @@ static statsite_config *GLOBAL_CONFIG;
  * Invoked to initialize the conn handler layer.
  */
 void init_conn_handler(statsite_config *config) {
-    // Make the initial metrics object
-    metrics *m = malloc(sizeof(metrics));
-    int res = init_metrics(config->timer_eps, config->quantiles,
-            config->num_quantiles, config->histograms, config->set_precision, m);
-    assert(res == 0);
-    GLOBAL_METRICS = m;
+	// Make the initial metrics object
+	metrics *m = malloc(sizeof(metrics));
+	int res = init_metrics(config->timer_eps, config->quantiles,
+			config->num_quantiles, config->histograms, config->set_precision, m);
+	assert(res == 0);
+	GLOBAL_METRICS = m;
 
-    // Store the config
-    GLOBAL_CONFIG = config;
+	// Store the config
+	GLOBAL_CONFIG = config;
 }
 
 /**
@@ -55,72 +55,72 @@ void init_conn_handler(statsite_config *config) {
  * metrics and any currently configured sinks.
  */
 struct flush_op {
-    metrics* m;
-    sink* sinks;
+	metrics* m;
+	sink* sinks;
 };
 
 /**
  * This is the thread that is invoked to handle flushing metrics
  */
 static void* flush_thread(void *arg) {
-    // Cast the args
-    struct flush_op* ops = arg;
-    metrics *m = ops->m;
-    sink* sinks = ops->sinks;
+	// Cast the args
+	struct flush_op* ops = arg;
+	metrics *m = ops->m;
+	sink* sinks = ops->sinks;
 
-    // Get the current time
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
+	// Get the current time
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
 
-    for (sink* s = sinks; s != NULL; s = s->next) {
-        int res = s->command(s, m, &tv);
-        if (res != 0) {
-            syslog(LOG_WARNING, "Streaming command %s exited with status %d", s->sink_config->name, res);
-        }
-    }
+	for (sink* s = sinks; s != NULL; s = s->next) {
+		int res = s->command(s, m, &tv);
+		if (res != 0) {
+			syslog(LOG_WARNING, "Streaming command %s exited with status %d", s->sink_config->name, res);
+		}
+	}
 
-    // Cleanup
-    destroy_metrics(m);
-    free(m);
-    free(ops);
-    return NULL;
+	// Cleanup
+	destroy_metrics(m);
+	free(m);
+	free(ops);
+	return NULL;
 }
 
 /**
  * Invoked to when we've reached the flush interval timeout
  */
 void flush_interval_trigger(sink* sinks) {
-    // Make a new metrics object
-    metrics *m = malloc(sizeof(metrics));
-    init_metrics(GLOBAL_CONFIG->timer_eps, GLOBAL_CONFIG->quantiles,
-            GLOBAL_CONFIG->num_quantiles, GLOBAL_CONFIG->histograms,
-            GLOBAL_CONFIG->set_precision, m);
+	// Make a new metrics object
+	metrics *m = malloc(sizeof(metrics));
+	init_metrics(GLOBAL_CONFIG->timer_eps, GLOBAL_CONFIG->quantiles,
+			GLOBAL_CONFIG->num_quantiles, GLOBAL_CONFIG->histograms,
+			GLOBAL_CONFIG->set_precision, m);
 
-    // Swap with the new one
-    struct flush_op* ops = calloc(1, sizeof(struct flush_op));
-    ops->m = GLOBAL_METRICS;
-    ops->sinks = sinks;
+	// Swap with the new one
+	struct flush_op* ops = calloc(1, sizeof(struct flush_op));
+	ops->m = GLOBAL_METRICS;
+	ops->sinks = sinks;
 
-    GLOBAL_METRICS = m;
+	GLOBAL_METRICS = m;
 
-    // Start a flush thread
-    pthread_t thread;
-    sigset_t oldset;
-    sigset_t newset;
-    sigfillset(&newset);
-    pthread_sigmask(SIG_BLOCK, &newset, &oldset);
-    int err = pthread_create(&thread, NULL, flush_thread, ops);
-    pthread_sigmask(SIG_SETMASK, &oldset, NULL);
+	// Start a flush thread
+	pthread_t thread;
+	sigset_t oldset;
+	sigset_t newset;
+	sigfillset(&newset);
+	pthread_sigmask(SIG_BLOCK, &newset, &oldset);
+	int err = pthread_create(&thread, NULL, flush_thread, ops);
+	pthread_sigmask(SIG_SETMASK, &oldset, NULL);
 
-    if (err == 0) {
-        pthread_detach(thread);
-        return;
-    }
+	if (err == 0) {
+		pthread_detach(thread);
+		return;
+	}
 
-    syslog(LOG_WARNING, "Failed to spawn flush thread: %s", strerror(err));
-    GLOBAL_METRICS = ops->m;
-    destroy_metrics(m);
-    free(m);
+	syslog(LOG_WARNING, "Failed to spawn flush thread: %s", strerror(err));
+	GLOBAL_METRICS = ops->m;
+	destroy_metrics(m);
+	free(m);
 }
 
 /**
@@ -128,21 +128,21 @@ void flush_interval_trigger(sink* sinks) {
  * final set of metrics
  */
 void final_flush(sink* sinks) {
-    // Get the last set of metrics
-    metrics *old = GLOBAL_METRICS;
-    GLOBAL_METRICS = NULL;
+	// Get the last set of metrics
+	metrics *old = GLOBAL_METRICS;
+	GLOBAL_METRICS = NULL;
 
-    /* We heap allocate this in order to allow it to be freed by the function */
-    struct flush_op* ops = calloc(1, sizeof(struct flush_op));
-    ops->m = old;
-    ops->sinks = sinks;
+	/* We heap allocate this in order to allow it to be freed by the function */
+	struct flush_op* ops = calloc(1, sizeof(struct flush_op));
+	ops->m = old;
+	ops->sinks = sinks;
 
-    flush_thread(ops);
+	flush_thread(ops);
 
-    for (sink* sink = sinks; sink != NULL; sink = sink->next) {
-        if (sink->close)
-            sink->close(sink);
-    }
+	for (sink* sink = sinks; sink != NULL; sink = sink->next) {
+		if (sink->close)
+			sink->close(sink);
+	}
 }
 
 
@@ -155,15 +155,52 @@ void final_flush(sink* sinks) {
  * @return 0 on success.
  */
 int handle_client_connect(statsite_conn_handler *handle) {
-    // Try to read the magic character, bail if no data
-    unsigned char magic;
-    if (unlikely(peek_client_byte(handle->conn, &magic) == -1)) return 0;
+	// Try to read the magic character, bail if no data
+	unsigned char magic;
+	if (unlikely(peek_client_byte(handle->conn, &magic) == -1)) return 0;
 
-    // Check the magic byte
-    if (magic == BINARY_MAGIC_BYTE)
-        return handle_binary_client_connect(handle);
-    else
-        return handle_ascii_client_connect(handle);
+	// Check the magic byte
+	if (magic == BINARY_MAGIC_BYTE)
+		return handle_binary_client_connect(handle);
+	else
+		return handle_ascii_client_connect(handle);
+}
+
+/**
+ * Simple string to double conversion
+ */
+static double str2double(const char *s, char **end) {
+	double val = 0.0;
+	char neg = 0;
+	const char *orig_s = s;
+
+	switch (*s) {
+		case '-':
+			neg = 1;
+		case '+':
+			s++;
+	}
+	for (; *s >= '0' && *s <= '9'; s++) {
+		val = (val * 10.0) + (*s - '0');
+	}
+	if (*s == '.') {
+		s++;
+		double frac = 0.0;
+		int digits = 0;
+		for (; *s >= '0' && *s <= '9'; s++) {
+			frac = (frac * 10.0) + (*s - '0');
+			digits++;
+		}
+		val += frac / pow(10.0, digits);
+	}
+	if (unlikely(*s == 'E' || *s == 'e')) {
+		errno = 0;
+		return strtod(orig_s, end);
+	}
+	if (neg) val *= -1.0;
+	if (end) *end = (char*)s;
+	errno = 0;
+	return val;
 }
 
 /**
@@ -173,140 +210,145 @@ int handle_client_connect(statsite_conn_handler *handle) {
  * @return 0 on success.
  */
 static int handle_ascii_client_connect(statsite_conn_handler *handle) {
-    // Look for the next command line
-    char *buf, *key, *val_str, *type_str, *sample_str, *endptr;
-    metric_type type;
-    int buf_len, should_free, status, i, after_len;
-    double val, sample_rate;
-    while (1) {
-        status = extract_to_terminator(handle->conn, '\n', &buf, &buf_len, &should_free);
-        if (status == -1) return 0; // Return if no command is available
+	// Look for the next command line
+	char *buf, *key, *val_str, *type_str, *sample_str, *endptr;
+	metric_type type;
+	int buf_len, should_free, status, i, after_len;
+	double val;
+	double sample_rate = 1.0;
 
-        // Check for a valid metric
-        // Scan for the colon
-        status = buffer_after_terminator(buf, buf_len, ':', &val_str, &after_len);
-        if (likely(!status)) status |= buffer_after_terminator(val_str, after_len, '|', &type_str, &after_len);
-        if (unlikely(status)) {
-            syslog(LOG_WARNING, "Failed parse metric! Input: %s", buf);
-            goto ERR_RET;
-        }
+	while (1) {
+		status = extract_to_terminator(handle->conn, '\n', &buf, &buf_len, &should_free);
+		if (status == -1) return 0; // Return if no command is available
 
-        // Convert the type
-        switch (*type_str) {
-            case 'c':
-                type = COUNTER;
-                break;
-            case 'h':
-            case 'm':
-                type = TIMER;
-                break;
-            case 'k':
-                type = KEY_VAL;
-                break;
-            case 'g':
-                type = GAUGE;
+		// Check for a valid metric
+		// Scan for the colon
+		status = buffer_after_terminator(buf, buf_len, ':', &val_str, &after_len);
+		if (likely(!status)) status |= buffer_after_terminator(val_str, after_len, '|', &type_str, &after_len);
+		if (unlikely(status)) {
+			syslog(LOG_WARNING, "Failed parse metric! Input: %s", buf);
+			goto ERR_RET;
+		}
 
-                // Check if this is a delta update
-                switch (*val_str) {
-                    case '+':
-                    case '-':
-                        type = GAUGE_DELTA;
-                }
-                break;
-            case 's':
-                type = SET;
-                break;
-            default:
-                type = UNKNOWN;
-                syslog(LOG_WARNING, "Received unknown metric type! Input: %c", *type_str);
-                goto ERR_RET;
-        }
+		// Convert the type
+		switch (*type_str) {
+			case 'c':
+				type = COUNTER;
+				break;
+			case 'h':
+			case 'm':
+				type = TIMER;
+				break;
+			case 'k':
+				type = KEY_VAL;
+				break;
+			case 'g':
+				type = GAUGE;
 
-        // Increment the number of inputs received
-        if (GLOBAL_CONFIG->input_counter)
-            metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1);
+				// Check if this is a delta update
+				switch (*val_str) {
+					case '+':
+					case '-':
+						type = GAUGE_DELTA;
+				}
+				break;
+			case 's':
+				type = SET;
+				break;
+			default:
+				type = UNKNOWN;
+				syslog(LOG_WARNING, "Received unknown metric type! Input: %c", *type_str);
+				goto ERR_RET;
+		}
 
-        // Fast track the set-updates
-        if (type == SET) {
-            metrics_set_update(GLOBAL_METRICS, buf, val_str);
-            goto END_LOOP;
-        }
+		// Increment the number of inputs received
+		if (GLOBAL_CONFIG->input_counter)
+			metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1, sample_rate);
 
-        // Convert the value to a double
-        val = strtod(val_str, &endptr);
-        if (unlikely(endptr == val_str)) {
-            syslog(LOG_WARNING, "Failed value conversion! Input: %s", val_str);
-            goto ERR_RET;
-        }
+		// Fast track the set-updates
+		if (type == SET) {
+			metrics_set_update(GLOBAL_METRICS, buf, val_str);
+			goto END_LOOP;
+		}
 
-        // Handle counter sampling if applicable
-        if (type == COUNTER && !buffer_after_terminator(type_str, after_len, '@', &sample_str, &after_len)) {
-            sample_rate = strtod(sample_str, &endptr);
-            if (unlikely(endptr == sample_str)) {
-                syslog(LOG_WARNING, "Failed sample rate conversion! Input: %s", sample_str);
-                goto ERR_RET;
-            }
-            if (sample_rate > 0 && sample_rate <= 1) {
-                // Magnify the value
-                val = val * (1.0 / sample_rate);
-            }
-        }
+		// Convert the value to a double
+		val = str2double(val_str, &endptr);
+		if (unlikely(endptr == val_str)) {
+			syslog(LOG_WARNING, "Failed value conversion! Input: %s", val_str);
+			goto ERR_RET;
+		}
 
-        // Store the sample
-        metrics_add_sample(GLOBAL_METRICS, type, buf, val);
+		// Handle counter sampling if applicable
+		if (type == COUNTER && !buffer_after_terminator(type_str, after_len, '@', &sample_str, &after_len)) {
+			double unchecked_rate = str2double(sample_str, &endptr);
+			if (unlikely(endptr == sample_str)) {
+				syslog(LOG_WARNING, "Failed sample rate conversion! Input: %s", sample_str);
+				goto ERR_RET;
+			}
+			if (likely(unchecked_rate > 0 && unchecked_rate <= 1)) {
+				sample_rate = unchecked_rate;
+				// Magnify the value
+				if (type == COUNTER) {
+					val = val * (1.0 / sample_rate);
+				}
+			}
+		}
+
+		// Store the sample
+		metrics_add_sample(GLOBAL_METRICS, type, buf, val, sample_rate);
 
 END_LOOP:
-        // Make sure to free the command buffer if we need to
-        if (should_free) free(buf);
-    }
+		// Make sure to free the command buffer if we need to
+		if (should_free) free(buf);
+	}
 
-    return 0;
+	return 0;
 ERR_RET:
-    if (should_free) free(buf);
-    return -1;
+	if (should_free) free(buf);
+	return -1;
 }
 
 // Handles the binary set command
 // Return 0 on success, -1 on error, -2 if missing data
 static int handle_binary_set(statsite_conn_handler *handle, uint16_t *header, int should_free) {
-    /*
-     * Abort if we haven't received the command
-     * header[1] is the key length
-     * header[2] is the set length
-     */
-    char *key;
-    int val_bytes = header[1] + header[2];
+	/*
+	 * Abort if we haven't received the command
+	 * header[1] is the key length
+	 * header[2] is the set length
+	 */
+	char *key;
+	int val_bytes = header[1] + header[2];
 
-    // Read the full command if available
-    if (unlikely(should_free)) free(header);
-    if (read_client_bytes(handle->conn, MIN_BINARY_HEADER_SIZE + val_bytes, (char**)&header, &should_free))
-        return -2;
-    key = ((char*)header) + MIN_BINARY_HEADER_SIZE;
+	// Read the full command if available
+	if (unlikely(should_free)) free(header);
+	if (read_client_bytes(handle->conn, MIN_BINARY_HEADER_SIZE + val_bytes, (char**)&header, &should_free))
+		return -2;
+	key = ((char*)header) + MIN_BINARY_HEADER_SIZE;
 
-    // Verify the null terminators
-    if (unlikely(*(key + header[1] - 1))) {
-        syslog(LOG_WARNING, "Received command from binary stream with non-null terminated key: %.*s!", header[1], key);
-        goto ERR_RET;
-    }
-    if (unlikely(*(key + val_bytes - 1))) {
-        syslog(LOG_WARNING, "Received command from binary stream with non-null terminated set key: %.*s!", header[2], key+header[1]);
-        goto ERR_RET;
-    }
+	// Verify the null terminators
+	if (unlikely(*(key + header[1] - 1))) {
+		syslog(LOG_WARNING, "Received command from binary stream with non-null terminated key: %.*s!", header[1], key);
+		goto ERR_RET;
+	}
+	if (unlikely(*(key + val_bytes - 1))) {
+		syslog(LOG_WARNING, "Received command from binary stream with non-null terminated set key: %.*s!", header[2], key+header[1]);
+		goto ERR_RET;
+	}
 
-    // Increment the input counter
-    if (GLOBAL_CONFIG->input_counter)
-        metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1);
+	// Increment the input counter
+	if (GLOBAL_CONFIG->input_counter)
+		metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1, 1.0);
 
-    // Update the set
-    metrics_set_update(GLOBAL_METRICS, key, key+header[1]);
+	// Update the set
+	metrics_set_update(GLOBAL_METRICS, key, key+header[1]);
 
-    // Make sure to free the command buffer if we need to
-    if (unlikely(should_free)) free(header);
-    return 0;
+	// Make sure to free the command buffer if we need to
+	if (unlikely(should_free)) free(header);
+	return 0;
 
 ERR_RET:
-    if (unlikely(should_free)) free(header);
-    return -1;
+	if (unlikely(should_free)) free(header);
+	return -1;
 }
 
 /**
@@ -315,88 +357,88 @@ ERR_RET:
  * @return 0 on success.
  */
 static int handle_binary_client_connect(statsite_conn_handler *handle) {
-    metric_type type;
-    uint16_t key_len;
-    int should_free;
-    unsigned char *cmd, *key;
-    while (1) {
-        // Peek and check for the header. This is up to 12 bytes.
-        // Magic byte - 1 byte
-        // Metric type - 1 byte
-        // Key length - 2 bytes
-        // Metric value - 8 bytes OR Set Length 2 bytes
-        if (peek_client_bytes(handle->conn, MIN_BINARY_HEADER_SIZE, (char**)&cmd, &should_free))
-            return 0;  // Return if no command is available
+	metric_type type;
+	uint16_t key_len;
+	int should_free;
+	unsigned char *cmd, *key;
+	while (1) {
+		// Peek and check for the header. This is up to 12 bytes.
+		// Magic byte - 1 byte
+		// Metric type - 1 byte
+		// Key length - 2 bytes
+		// Metric value - 8 bytes OR Set Length 2 bytes
+		if (peek_client_bytes(handle->conn, MIN_BINARY_HEADER_SIZE, (char**)&cmd, &should_free))
+			return 0;  // Return if no command is available
 
-        // Check for the magic byte
-        if (unlikely(cmd[0] != BINARY_MAGIC_BYTE)) {
-            syslog(LOG_WARNING, "Received command from binary stream without magic byte! Byte: %u", cmd[0]);
-            goto ERR_RET;
-        }
+		// Check for the magic byte
+		if (unlikely(cmd[0] != BINARY_MAGIC_BYTE)) {
+			syslog(LOG_WARNING, "Received command from binary stream without magic byte! Byte: %u", cmd[0]);
+			goto ERR_RET;
+		}
 
-        // Get the metric type
-        switch (cmd[1]) {
-            case BIN_TYPE_KV:
-                type = KEY_VAL;
-                break;
-            case BIN_TYPE_COUNTER:
-                type = COUNTER;
-                break;
-            case BIN_TYPE_TIMER:
-                type = TIMER;
-                break;
-            case BIN_TYPE_GAUGE:
-                type = GAUGE;
-                break;
-            case BIN_TYPE_GAUGE_DELTA:
-                type = GAUGE_DELTA;
-                break;
+		// Get the metric type
+		switch (cmd[1]) {
+			case BIN_TYPE_KV:
+				type = KEY_VAL;
+				break;
+			case BIN_TYPE_COUNTER:
+				type = COUNTER;
+				break;
+			case BIN_TYPE_TIMER:
+				type = TIMER;
+				break;
+			case BIN_TYPE_GAUGE:
+				type = GAUGE;
+				break;
+			case BIN_TYPE_GAUGE_DELTA:
+				type = GAUGE_DELTA;
+				break;
 
-            // Special case set handling
-            case BIN_TYPE_SET:
-                switch (handle_binary_set(handle, (uint16_t*)cmd, should_free)) {
-                    case -1:
-                        return -1;
-                    case -2:
-                        return 0;
-                    default:
-                        continue;
-                }
+				// Special case set handling
+			case BIN_TYPE_SET:
+				switch (handle_binary_set(handle, (uint16_t*)cmd, should_free)) {
+					case -1:
+						return -1;
+					case -2:
+						return 0;
+					default:
+						continue;
+				}
 
-            default:
-                syslog(LOG_WARNING, "Received command from binary stream with unknown type: %u!", cmd[1]);
-                goto ERR_RET;
-        }
+			default:
+				syslog(LOG_WARNING, "Received command from binary stream with unknown type: %u!", cmd[1]);
+				goto ERR_RET;
+		}
 
-        // Abort if we haven't received the full key, wait for the data
-        key_len = *(uint16_t*)(cmd+2);
+		// Abort if we haven't received the full key, wait for the data
+		key_len = *(uint16_t*)(cmd+2);
 
-        // Read the full command if available
-        if (unlikely(should_free)) free(cmd);
-        if (read_client_bytes(handle->conn, MAX_BINARY_HEADER_SIZE + key_len, (char**)&cmd, &should_free))
-            return 0;
-        key = cmd + MAX_BINARY_HEADER_SIZE;
+		// Read the full command if available
+		if (unlikely(should_free)) free(cmd);
+		if (read_client_bytes(handle->conn, MAX_BINARY_HEADER_SIZE + key_len, (char**)&cmd, &should_free))
+			return 0;
+		key = cmd + MAX_BINARY_HEADER_SIZE;
 
-        // Verify the key contains a null terminator
-        if (unlikely(*(key + key_len - 1))) {
-            syslog(LOG_WARNING, "Received command from binary stream with non-null terminated key: %.*s!", key_len, key);
-            goto ERR_RET;
-        }
+		// Verify the key contains a null terminator
+		if (unlikely(*(key + key_len - 1))) {
+			syslog(LOG_WARNING, "Received command from binary stream with non-null terminated key: %.*s!", key_len, key);
+			goto ERR_RET;
+		}
 
-        // Increment the input counter
-        if (GLOBAL_CONFIG->input_counter)
-            metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1);
+		// Increment the input counter
+		if (GLOBAL_CONFIG->input_counter)
+			metrics_add_sample(GLOBAL_METRICS, COUNTER, GLOBAL_CONFIG->input_counter, 1, 1.0);
 
-        // Add the sample
-        metrics_add_sample(GLOBAL_METRICS, type, (char*)key, *(double*)(cmd+4));
+		// Add the sample
+		metrics_add_sample(GLOBAL_METRICS, type, (char*)key, *(double*)(cmd+4), 1.0);
 
-        // Make sure to free the command buffer if we need to
-        if (unlikely(should_free)) free(cmd);
-    }
-    return 0;
+		// Make sure to free the command buffer if we need to
+		if (unlikely(should_free)) free(cmd);
+	}
+	return 0;
 ERR_RET:
-    if (unlikely(should_free)) free(cmd);
-    return -1;
+	if (unlikely(should_free)) free(cmd);
+	return -1;
 }
 
 
@@ -412,18 +454,18 @@ ERR_RET:
  * @return 0 if terminator found. -1 otherwise.
  */
 static int buffer_after_terminator(char *buf, int buf_len, char terminator, char **after_term, int *after_len) {
-    // Scan for a space
-    char *term_addr = memchr(buf, terminator, buf_len);
-    if (!term_addr) {
-        *after_term = NULL;
-        return -1;
-    }
+	// Scan for a space
+	char *term_addr = memchr(buf, terminator, buf_len);
+	if (!term_addr) {
+		*after_term = NULL;
+		return -1;
+	}
 
-    // Convert the space to a null-seperator
-    *term_addr = '\0';
+	// Convert the space to a null-seperator
+	*term_addr = '\0';
 
-    // Provide the arg buffer, and arg_len
-    *after_term = term_addr+1;
-    *after_len = buf_len - (term_addr - buf + 1);
-    return 0;
+	// Provide the arg buffer, and arg_len
+	*after_term = term_addr+1;
+	*after_len = buf_len - (term_addr - buf + 1);
+	return 0;
 }

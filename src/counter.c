@@ -7,12 +7,13 @@
  * @return 0 on success.
  */
 int init_counter(counter *counter) {
-    counter->count = 0;
-    counter->sum = 0;
-    counter->squared_sum = 0;
-    counter->min = 0;
-    counter->max = 0;
-    return 0;
+	counter->actual_count = 0;
+	counter->count = 0;
+	counter->sum = 0;
+	counter->squared_sum = 0;
+	counter->min = 0;
+	counter->max = 0;
+	return 0;
 }
 
 /**
@@ -21,19 +22,20 @@ int init_counter(counter *counter) {
  * @arg sample The new sample value
  * @return 0 on success.
  */
-int counter_add_sample(counter *counter, double sample) {
-    if (counter->count == 0) {
-        counter->min = counter->max = sample;
-    } else {
-        if (counter->min > sample)
-            counter->min = sample;
-        else if (counter->max < sample)
-            counter->max = sample;
-    }
-    counter->count++;
-    counter->sum += sample;
-    counter->squared_sum += pow(sample, 2);
-    return 0;
+int counter_add_sample(counter *counter, double sample, double sample_rate) {
+	if (counter->count == 0) {
+		counter->min = counter->max = sample;
+	} else {
+		if (counter->min > sample)
+			counter->min = sample;
+		else if (counter->max < sample)
+			counter->max = sample;
+	}
+	counter->actual_count += 1;
+	counter->count += (1 / sample_rate);
+	counter->sum += sample;
+	counter->squared_sum += pow(sample, 2);
+	return 0;
 }
 
 /**
@@ -42,7 +44,7 @@ int counter_add_sample(counter *counter, double sample) {
  * @return The number of samples
  */
 uint64_t counter_count(counter *counter) {
-    return counter->count;
+	return counter->count;
 }
 
 /**
@@ -51,7 +53,7 @@ uint64_t counter_count(counter *counter) {
  * @return The mean value
  */
 double counter_mean(counter *counter) {
-    return (counter->count) ? counter->sum / counter->count : 0;
+	return (counter->actual_count) ? counter->sum / counter->actual_count : 0;
 }
 
 /**
@@ -60,10 +62,10 @@ double counter_mean(counter *counter) {
  * @return The sample standard deviation
  */
 double counter_stddev(counter *counter) {
-    double num = (counter->count * counter->squared_sum) - pow(counter->sum, 2);
-    double div = counter->count * (counter->count - 1);
-    if (div == 0) return 0;
-    return sqrt(num / div);
+	double num = (counter->actual_count * counter->squared_sum) - pow(counter->sum, 2);
+	double div = counter->actual_count * (counter->actual_count - 1);
+	if (div == 0) return 0;
+	return sqrt(num / div);
 }
 
 /**
@@ -72,7 +74,7 @@ double counter_stddev(counter *counter) {
  * @return The sum of values
  */
 double counter_sum(counter *counter) {
-    return counter->sum;
+	return counter->sum;
 }
 
 /**
@@ -81,7 +83,7 @@ double counter_sum(counter *counter) {
  * @return The sum squared of values
  */
 double counter_squared_sum(counter *counter) {
-    return counter->squared_sum;
+	return counter->squared_sum;
 }
 
 /**
@@ -90,7 +92,7 @@ double counter_squared_sum(counter *counter) {
  * @return The minimum value.
  */
 double counter_min(counter *counter) {
-    return counter->min;
+	return counter->min;
 }
 
 /**
@@ -99,6 +101,6 @@ double counter_min(counter *counter) {
  * @return The maximum value.
  */
 double counter_max(counter *counter) {
-    return counter->max;
+	return counter->max;
 }
 
