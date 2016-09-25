@@ -763,8 +763,18 @@ statsite_config* alloc_config() {
  * @arg config The config object to free.
  */
 void free_config(statsite_config* config) {
+    int i;
     if (config->quantiles != default_quantiles) {
         free (config->quantiles);
+    }
+    if (config->log_level != NULL) {
+        free(config->log_level);
+    }
+    if (config->pid_file != NULL) {
+        free(config->pid_file);
+    }
+    for(i = 0; i < METRIC_TYPES; i++) {
+        free(config->prefixes[i]);
     }
     free(config);
 }
