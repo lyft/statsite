@@ -64,7 +64,8 @@ static int stream_formatter(FILE *pipe, void *data, metric_type type, char *name
                 if (quantile == 0.5) {
                     STREAM("%s%s.median|%f|%lld\n", prefix, name, timer_query(&t->tm, 0.5));
                 }
-                STREAM("%s%s.p%d|%f|%lld\n", prefix, name, ct->global_config->percentiles[i], timer_query(&t->tm, quantile));
+                STREAM("%s%s.p%d|%f|%lld\n", prefix, name, ct->global_config->percentiles[i],
+                       timer_quantile_tdigest(&t->tm, quantile));
             }
             STREAM("%s%s.rate|%f|%lld\n", prefix, name, timer_sum(&t->tm) / ct->global_config->flush_interval);
             STREAM("%s%s.sample_rate|%f|%lld\n", prefix, name, (double)timer_count(&t->tm) / ct->global_config->flush_interval);

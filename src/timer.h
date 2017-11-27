@@ -2,6 +2,7 @@
 #define TIMER_H
 #include <stdint.h>
 #include "cm_quantile.h"
+#include "tdigest.h"
 
 typedef struct {
     uint64_t actual_count; // Actual items recieved
@@ -10,17 +11,19 @@ typedef struct {
     double squared_sum; // Sum of the squared values
     int finalized;      // Is the cm_quantile finalized
     cm_quantile cm;     // Quantile we use
+    t_digest* td;      // tdigest
 } timer;
 
 /**
  * Initializes the timer struct
  * @arg eps The maximum error for the quantiles
+ * @arg compression t-digest compression
  * @arg quantiles A sorted array of double quantile values, must be on (0, 1)
  * @arg num_quants The number of entries in the quantiles array
  * @arg timeer The timer struct to initialize
  * @return 0 on success.
  */
-int init_timer(double eps, double *quantiles, uint32_t num_quants, timer *timer);
+int init_timer(double eps, int compression, double *quantiles, uint32_t num_quants, timer *timer);
 
 /**
  * Destroy the timer struct.
@@ -47,6 +50,14 @@ int timer_add_sample(timer *timer, double sample, double sample_rate);
 double timer_query(timer *timer, double quantile);
 
 /**
+ * Queries for a quantile value from tdigest
+ * @param timer         timer structure to query
+ * @param quantile      quantile query
+ * @return  the value
+ */
+double timer_quantile_tdigest(timer *timer, double quantile);
+
+/**
  * Returns the number of samples in the timer
  * @arg timer The timer to query
  * @return The number of samples
@@ -59,6 +70,13 @@ uint64_t timer_count(timer *timer);
  * @return The number of samples
  */
 double timer_min(timer *timer);
+
+/**
+ * return "true min" value
+ * @param timer the timer to query
+ * @return the min
+ */
+double timer_min_tdigest(timer *timer);
 
 /**
  * Returns the mean timer value
@@ -94,5 +112,12 @@ double timer_squared_sum(timer *timer);
  * @return The maximum value
  */
 double timer_max(timer *timer);
+
+/**
+ * Returns the maximum timer value
+ * @arg timer The timer to query
+ * @return The maximum value
+ */
+double timer_max_tdigest(timer *timer);
 
 #endif

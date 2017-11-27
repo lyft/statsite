@@ -13,7 +13,7 @@ START_TEST(test_metrics_init_and_destroy)
 {
     metrics m;
     double quants[] = {0.5, 0.90, 0.99};
-    int res = init_metrics(0.01, (double*)&quants, 3, NULL, 12, &m);
+    int res = init_metrics(0.01, 200, (double*)&quants, 3, NULL, 12, &m);
     fail_unless(res == 0);
 
     res = destroy_metrics(&m);
@@ -173,7 +173,7 @@ START_TEST(test_metrics_histogram)
 
     metrics m;
     double quants[] = {0.5, 0.90, 0.99};
-    res = init_metrics(0.01, (double*)&quants, 3, config.histograms, 12, &m);
+    res = init_metrics(0.01, 200, (double*)&quants, 3, config.histograms, 12, &m);
     fail_unless(res == 0);
 
     fail_unless(metrics_add_sample(&m, TIMER, "baz", 1, 1.0) == 0);

@@ -116,8 +116,8 @@ static int add_metrics(void* data,
         char suffixed[base_len + suffix_space];
         strcpy(suffixed, full_name);
         SUFFIX_ADD(".mean", json_real(timer_mean(&t->tm)));
-        SUFFIX_ADD(".lower", json_real(timer_min(&t->tm)));
-        SUFFIX_ADD(".upper", json_real(timer_max(&t->tm)));
+        SUFFIX_ADD(".lower", json_real(timer_min_tdigest(&t->tm)));
+        SUFFIX_ADD(".upper", json_real(timer_max_tdigest(&t->tm)));
         SUFFIX_ADD(".count", json_integer(timer_count(&t->tm)));
         for (int i = 0; i < config->num_quantiles; i++) {
             char ptile[suffix_space];
@@ -131,7 +131,7 @@ static int add_metrics(void* data,
             to_percentile(quantile, &percentile);
             snprintf(ptile, suffix_space, ".p%d", percentile);
             ptile[suffix_space-1] = '\0';
-            SUFFIX_ADD(ptile, json_real(timer_query(&t->tm, quantile)));
+            SUFFIX_ADD(ptile, json_real(timer_quantile_tdigest(&t->tm, quantile)));
         }
         SUFFIX_ADD(".rate", json_real(timer_sum(&t->tm) / config->flush_interval));
         SUFFIX_ADD(".sample_rate", json_real((double)timer_count(&t->tm) / config->flush_interval));

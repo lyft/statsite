@@ -97,6 +97,7 @@ typedef struct {
     char *log_facility;
     int syslog_log_facility;
     double timer_eps;
+    int tdigest_compression;
     int flush_interval;
     bool daemonize;
     char *pid_file;

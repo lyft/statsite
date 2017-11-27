@@ -15,6 +15,7 @@
 #include "sink.h"
 #include "streaming.h"
 #include "conn_handler.h"
+#include "config.h"
 
 /* Static method declarations */
 static int handle_ascii_client_connect(statsite_conn_handler *handle);
@@ -32,7 +33,7 @@ static statsite_config *GLOBAL_CONFIG;
 void init_conn_handler(statsite_config *config) {
     // Make the initial metrics object
     metrics *m = malloc(sizeof(metrics));
-    int res = init_metrics(config->timer_eps, config->quantiles,
+    int res = init_metrics(config->timer_eps, config->tdigest_compression, config->quantiles,
             config->num_quantiles, config->histograms, config->set_precision, m);
     assert(res == 0);
     GLOBAL_METRICS = m;
@@ -83,7 +84,7 @@ static void* flush_thread(void *arg) {
 void flush_interval_trigger(sink* sinks) {
     // Make a new metrics object
     metrics *m = malloc(sizeof(metrics));
-    init_metrics(GLOBAL_CONFIG->timer_eps, GLOBAL_CONFIG->quantiles,
+    init_metrics(GLOBAL_CONFIG->timer_eps, GLOBAL_CONFIG->tdigest_compression, GLOBAL_CONFIG->quantiles,
             GLOBAL_CONFIG->num_quantiles, GLOBAL_CONFIG->histograms,
             GLOBAL_CONFIG->set_precision, m);
 

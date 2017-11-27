@@ -1,5 +1,4 @@
 #include <check.h>
-#include <stdio.h>
 #include "strbuf.h"
 
 START_TEST(test_strbuf_new)

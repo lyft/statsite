@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "config.h"
+#include "../src/config.h"
 
 START_TEST(test_config_get_default)
 {
@@ -20,6 +21,7 @@ START_TEST(test_config_get_default)
     fail_unless(config.syslog_log_level == LOG_DEBUG);
     fail_unless(config.syslog_log_facility == LOG_LOCAL0);
     fail_unless(config.timer_eps == (double)1e-2);
+    fail_unless(config.tdigest_compression == 200);
     sink_config_stream* sc = (sink_config_stream*)config.sink_configs;
     fail_unless(strcmp(sc->stream_cmd, "cat") == 0);
     fail_unless(config.flush_interval == 10);
@@ -114,7 +116,9 @@ input_counter = foobar\n\
 pid_file = /tmp/statsite.pid\n\
 extended_counters = true\n\
 quantiles = 0.5, 0.90, 0.95, 0.99\n";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
+
     fchmod(fh, 777);
     close(fh);
 
@@ -167,7 +171,9 @@ input_counter = foobar\n\
 pid_file = /tmp/statsite.pid\n\
 extended_counters = true\n\
 quantiles = 0.5, 0.90, 0.95, 0.99, 0.999999\n";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
+
     fchmod(fh, 777);
     close(fh);
 
@@ -349,6 +355,7 @@ port = 10000\n\
 udp_port = 10001\n\
 flush_interval = 120\n\
 timer_eps = 0.005\n\
+tdigest_compression = 200\n\
 log_level = INFO\n\
 log_facility = local0\n\
 daemonize = true\n\
@@ -374,7 +381,9 @@ max=500\n\
 width=25\n\
 \n\
 ";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
+
     fchmod(fh, 777);
     close(fh);
 
@@ -387,6 +396,7 @@ width=25\n\
     fail_unless(config.udp_port == 10001);
     fail_unless(strcmp(config.log_level, "INFO") == 0);
     fail_unless(config.timer_eps == (double)0.005);
+    fail_unless(config.tdigest_compression == 200);
     fail_unless(config.flush_interval == 120);
     fail_unless(config.daemonize == true);
     fail_unless(strcmp(config.pid_file, "/tmp/statsite.pid") == 0);
@@ -425,6 +435,7 @@ START_TEST(test_build_radix)
 {
     statsite_config config;
     int res = config_from_filename(NULL, &config);
+    fail_unless(res == 0);
 
     histogram_config c1 = {"foo", 100, 200, 10, 0, NULL, 0};
     histogram_config c2 = {"bar", 100, 200, 10, 0, NULL, 0};
@@ -451,7 +462,8 @@ kv_prefix = keyVALUE.1-2_3\n\
 gauges_prefix =\n\
 counts_prefix=foo.counts.bar.\n\
 ";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -481,7 +493,8 @@ use_type_prefix = 0\n\
 kv_prefix = keyVALUE.1-2_3\n\
 gauges_prefix =\n\
 counts_prefix=foo.sets.bar";
-    write(fh, buf, strlen(buf));
+    sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -512,7 +525,8 @@ global_prefix = statsite.\n\
 kv_prefix = keyVALUE.1-2_3\n\
 gauges_prefix =\n\
 counts_prefix=foo.sets.bar";
-    write(fh, buf, strlen(buf));
+    sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -546,6 +560,7 @@ udp_port = 10001\n\
 parse_stdin = true\n\
 flush_interval = 120\n\
 timer_eps = 0.005\n\
+tdigest_compression = 200\n\
 set_eps = 0.03\n\
 log_level = INFO\n\
 log_facility = level0\n\
@@ -557,7 +572,8 @@ use_type_prefix = 1\n\
 kv_prefix = keyvalue.\n\
 gauges_prefix =\n\
 sets_prefix=foo.sets.bar.";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -575,6 +591,7 @@ sets_prefix=foo.sets.bar.";
     fail_unless(config.parse_stdin == true);
     fail_unless(strcmp(config.log_level, "INFO") == 0);
     fail_unless(config.timer_eps == (double)0.005);
+    fail_unless(config.tdigest_compression == 200);
     fail_unless(config.set_eps == (double)0.03);
     fail_unless(config.flush_interval == 120);
     fail_unless(config.daemonize == true);
@@ -601,6 +618,7 @@ port = 10000\n\
 udp_port = 10001\n\
 flush_interval = 120\n\
 timer_eps = 0.005\n\
+tdigest_compression = 200\n\
 log_level = INFO\n\
 log_facility = local0\n\
 daemonize = true\n\
@@ -610,7 +628,8 @@ pid_file = /tmp/statsite.pid\n\
 [sink_stream_main]\n\
 command=cat\n\
 ";
-    write(fh, buf, strlen(buf));
+    ssize_t sz = write(fh, buf, strlen(buf));
+    fail_unless(sz > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -647,6 +666,7 @@ port = 10000\n\
 udp_port = 10001\n\
 flush_interval = 120\n\
 timer_eps = 0.005\n\
+tdigest_compression = 200\n\
 log_level = INFO\n\
 log_facility = local0\n\
 daemonize = true\n\
@@ -671,7 +691,8 @@ send_backoff_ms=1000\n\
 \n\
 \n\
 ";
-    write(fh, buf, strlen(buf));
+    int ssize = write(fh, buf, strlen(buf));
+    fail_unless(ssize > 0);
     fchmod(fh, 777);
     close(fh);
 
@@ -684,6 +705,7 @@ send_backoff_ms=1000\n\
     fail_unless(config.udp_port == 10001);
     fail_unless(strcmp(config.log_level, "INFO") == 0);
     fail_unless(config.timer_eps == (double)0.005);
+    fail_unless(config.tdigest_compression == 200);
     fail_unless(config.flush_interval == 120);
     fail_unless(config.daemonize == true);
     fail_unless(strcmp(config.pid_file, "/tmp/statsite.pid") == 0);

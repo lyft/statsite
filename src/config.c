@@ -49,6 +49,7 @@ static const statsite_config DEFAULT_CONFIG = {
     "local0",           // local0 logging facility
     LOG_LOCAL0,         // Syslog logging facility
     0.01,               // Default 1% error
+    200,                // default t-digest compression
     10,                 // Flush every 10 seconds
     0,                  // Do not daemonize
     "/var/run/statsite.pid", // Default pidfile path
@@ -471,12 +472,13 @@ static int config_callback(void* user, const char* section, const char* name, co
         return value_to_bool(value, &config->use_type_prefix);
     } else if (NAME_MATCH("extended_counters")) {
         return value_to_bool(value, &config->extended_counters);
+    } else if (NAME_MATCH("tdigest_compression")) {
+        return value_to_int(value, &config->tdigest_compression);
     // Handle the double cases
     } else if (NAME_MATCH("timer_eps")) {
         return value_to_double(value, &config->timer_eps);
     } else if (NAME_MATCH("set_eps")) {
         return value_to_double(value, &config->set_eps);
-
     // Handle quantiles as a comma-separated list of doubles
     } else if (NAME_MATCH("quantiles")) {
         if (value_to_list_of_doubles(value, &config->quantiles, &config->num_quantiles)) {
@@ -688,6 +690,19 @@ int sane_timer_eps(double eps) {
     return 0;
 }
 
+int sane_tdigest_compression(int compression) {
+    if (compression < 20) {
+        syslog(LOG_ERR,
+               "t-digest compression value cannot be below 20!");
+        return 1;
+    } else if (compression > 1000) {
+        syslog(LOG_ERR,
+               "t-digest compression value cannot be over 1000!");
+        return 1;
+    }
+    return 0;
+}
+
 int sane_flush_interval(int intv) {
     if (intv <= 0) {
         syslog(LOG_ERR, "Flush interval cannot be negative!");
@@ -830,6 +845,7 @@ int validate_config(statsite_config *config) {
     res |= sane_log_level(config->log_level, &config->syslog_log_level);
     res |= sane_log_facility(config->log_facility, &config->syslog_log_facility);
     res |= sane_timer_eps(config->timer_eps);
+    res |= sane_tdigest_compression(config->tdigest_compression);
     res |= sane_flush_interval(config->flush_interval);
     res |= sane_histograms(config->hist_configs);
     res |= sane_set_precision(config->set_eps, &config->set_precision);

@@ -128,14 +128,6 @@ START_TEST(test_cm_init_add_negative_query_destroy)
 }
 END_TEST
 
-void print_cm(cm_quantile *cm) {
-    cm_sample *samp = cm->samples;
-    while (samp) {
-        printf("%f - %lld %lld\n", samp->value, samp->width, samp->delta);
-        samp = samp->next;
-    }
-}
-
 START_TEST(test_cm_init_add_loop_query_destroy)
 {
     cm_quantile cm;

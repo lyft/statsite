@@ -33,6 +33,7 @@ flush_interval = 1
 port = 0
 udp_port = 0
 parse_stdin = yes
+tdigest_compression = 200
 
 [sink_stream_default]
 command = %s
@@ -172,8 +173,8 @@ class TestInteg(object):
         assert "timers.noobs.upper|99.000000" in out
         assert "timers.noobs.count|100" in out
         assert "timers.noobs.median|49.000000" in out
-        assert "timers.noobs.p95|95.000000" in out
-        assert "timers.noobs.p99|99.000000" in out
+        assert "timers.noobs.p95|94.500000" in out
+        assert "timers.noobs.p99|98.500000" in out
 
     def test_histogram(self, servers):
         "Tests adding keys with histograms"

@@ -17,18 +17,21 @@ struct cb_info {
 };
 
 /**
- * Initializes the metrics struct.
- * @arg eps The maximum error for the quantiles
- * @arg quantiles A sorted array of double quantile values, must be on (0, 1)
- * @arg num_quants The number of entries in the quantiles array
- * @arg histograms A radix tree with histogram settings. This is not owned
- * by the metrics object. It is assumed to exist for the life of the metrics.
- * @arg set_precision The precision to use for sets
- * @return 0 on success.
+ * Initializes the metrics structure.
+ * @param timer_eps             the maximum error for the quantiles
+ * @param timer_compression     t-digest compression
+ * @param quantiles             sorted array of double quantile values, must be on (0, 1)
+ * @param num_quants            number of entries in the quantiles array
+ * @param histograms            radix tree with histogram settings
+ * @param set_precision         the precision to use for sets
+ * @param m                     metrics structure
+ * @return 0 on success
  */
-int init_metrics(double timer_eps, double *quantiles, uint32_t num_quants, radix_tree *histograms, unsigned char set_precision, metrics *m) {
+int init_metrics(double timer_eps, int compression, double *quantiles, uint32_t num_quants, radix_tree *histograms,
+                 unsigned char set_precision, metrics *m) {
     // Copy the inputs
     m->timer_eps = timer_eps;
+    m->compression = compression;
     m->num_quants = num_quants;
     m->quantiles = malloc(num_quants * sizeof(double));
     memcpy(m->quantiles, quantiles, num_quants * sizeof(double));
@@ -59,7 +62,7 @@ int init_metrics(double timer_eps, double *quantiles, uint32_t num_quants, radix
  */
 int init_metrics_defaults(metrics *m) {
     double quants[] = {0.5, 0.95, 0.99};
-    return init_metrics(0.01, (double*)&quants, 3, NULL, 12, m);
+    return init_metrics(0.01, DEFAULT_COMPRESSION, (double*)&quants, 3, NULL, 12, m);
 }
 
 /**
@@ -142,7 +145,7 @@ static int metrics_add_timer_sample(metrics *m, char *name, double val, double s
     // New timer
     if (res == -1) {
         t = malloc(sizeof(timer_hist));
-        init_timer(m->timer_eps, m->quantiles, m->num_quants, &t->tm);
+        init_timer(m->timer_eps, m->compression, m->quantiles, m->num_quants, &t->tm);
         hashmap_put(m->timers, name, t);
 
         // Check if we have any histograms configured

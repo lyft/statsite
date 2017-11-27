@@ -12,7 +12,7 @@
 //-----------------------------------------------------------------------------
 // Platform-specific functions and macros
 
-#define	FORCE_INLINE __attribute__((always_inline))
+#define	FORCE_INLINE __attribute__((always_inline)) inline
 
 inline uint64_t rotl64(uint64_t x, int8_t r){
   return (x << r) | (x >> (64 - r));

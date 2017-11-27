@@ -30,6 +30,7 @@ typedef struct {
     hashmap *gauges;    // Map of name -> guage struct
     key_val *kv_vals;   // Linked list of key_val structs
     double timer_eps;   // The error for timers
+    int compression;    // t-digest compression
     double *quantiles;  // Array of quantiles
     uint32_t num_quants; // Size of quantiles array
     radix_tree *histograms; // Radix tree with histogram configs
@@ -39,16 +40,17 @@ typedef struct {
 typedef int(*metric_callback)(void *data, metric_type type, char *name, void *val);
 
 /**
- * Initializes the metrics struct.
- * @arg eps The maximum error for the quantiles
- * @arg quantiles A sorted array of double quantile values, must be on (0, 1)
- * @arg num_quants The number of entries in the quantiles array
- * @arg histograms A radix tree with histogram settings. This is not owned
- * by the metrics object. It is assumed to exist for the life of the metrics.
- * @arg set_precision The precision to use for sets
- * @return 0 on success.
+ * Initializes the metrics structure.
+ * @param timer_eps             the maximum error for the quantiles
+ * @param timer_compression     t-digest compression
+ * @param quantiles             sorted array of double quantile values, must be on (0, 1)
+ * @param num_quants            number of entries in the quantiles array
+ * @param histograms            radix tree with histogram settings
+ * @param set_precision         the precision to use for sets
+ * @param m                     metrics structure
+ * @return 0 on success
  */
-int init_metrics(double timer_eps, double *quantiles, uint32_t num_quants, radix_tree *histograms, unsigned char set_precision, metrics *m);
+int init_metrics(double timer_eps, int timer_compression, double *quantiles, uint32_t num_quants, radix_tree *histograms, unsigned char set_precision, metrics *m);
 
 /**
  * Initializes the metrics struct, with preset configurations.

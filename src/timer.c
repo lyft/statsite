@@ -12,13 +12,14 @@ static void finalize_timer(timer *timer);
  * @arg timeer The timer struct to initialize
  * @return 0 on success.
  */
-int init_timer(double eps, double *quantiles, uint32_t num_quants, timer *timer) {
+int init_timer(double eps, int compression, double *quantiles, uint32_t num_quants, timer *timer) {
     timer->actual_count = 0;
     timer->count = 0;
     timer->sum = 0;
     timer->squared_sum = 0;
     timer->finalized = 1;
     int res = init_cm_quantile(eps, quantiles, num_quants, &timer->cm);
+    timer->td = init_tdigest(compression);
     return res;
 }
 
@@ -28,6 +29,7 @@ int init_timer(double eps, double *quantiles, uint32_t num_quants, timer *timer)
  * @return 0 on success.
  */
 int destroy_timer(timer *timer) {
+    t_digest_free(timer->td);
     return destroy_cm_quantile(&timer->cm);
 }
 
@@ -44,6 +46,7 @@ int timer_add_sample(timer *timer, double sample, double sample_rate) {
     timer->sum += sample;
     timer->squared_sum += pow(sample, 2);
     timer->finalized = 0;
+    t_digest_add(timer->td, sample, 1);
     return cm_add_sample(&timer->cm, sample);
 }
 
@@ -56,6 +59,16 @@ int timer_add_sample(timer *timer, double sample, double sample_rate) {
 double timer_query(timer *timer, double quantile) {
     finalize_timer(timer);
     return cm_query(&timer->cm, quantile);
+}
+
+/**
+ * Queries for a quantile value from tdigest
+ * @param timer         timer structure to query
+ * @param quantile      quantile query
+ * @return  the value
+ */
+double timer_quantile_tdigest(timer *timer, double quantile) {
+    return t_digest_quantile(timer->td, quantile);
 }
 
 /**
@@ -76,6 +89,15 @@ double timer_min(timer *timer) {
     finalize_timer(timer);
     if (!timer->cm.samples) return 0;
     return timer->cm.samples->value;
+}
+
+/**
+ *
+ * @param timer timer structure
+ * @return the min of timer
+ */
+double timer_min_tdigest(timer *timer) {
+    return t_digest_quantile(timer->td, 0.0);
 }
 
 /**
@@ -126,6 +148,15 @@ double timer_max(timer *timer) {
     finalize_timer(timer);
     if (!timer->cm.end) return 0;
     return timer->cm.end->value;
+}
+
+/**
+ *
+ * @param timer
+ * @return  the timer max
+ */
+double timer_max_tdigest(timer *timer) {
+    return t_digest_quantile(timer->td, 1.0);
 }
 
 // Finalizes the timer for queries

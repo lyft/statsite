@@ -16,6 +16,7 @@
 #include "test_lifoq.c"
 #include "test_strbuf.c"
 #include "test_utils.c"
+#include "test_tdigest.c"
 
 int main(void)
 {
@@ -37,6 +38,7 @@ int main(void)
     TCase *tc13 = tcase_create("lifoq");
     TCase *tc14 = tcase_create("strbuf");
     TCase *tc15 = tcase_create("utils");
+    TCase *tc16 = tcase_create("tdigest");
     SRunner *sr = srunner_create(s1);
     int nf;
 
@@ -184,6 +186,16 @@ int main(void)
     suite_add_tcase(s1, tc15);
     tcase_add_test(tc15, test_percentile_convertion);
 
+    // tdigest test cases
+    suite_add_tcase(s1, tc16);
+    tcase_add_test(tc16, test_td_init_and_destroy);
+    tcase_add_test(tc16, test_td_init_add_destroy);
+    tcase_add_test(tc16, test_td_stream_add_check_upper_lower);
+    tcase_add_test(tc16, test_td_init_add_loop_random_query_destroy);
+    tcase_add_test(tc16, test_td_init_add_loop_rev_query_destroy);
+    tcase_add_test(tc16, test_td_init_add_negative_query_destroy);
+
+    // sink http test case
     srunner_run_all(sr, CK_ENV);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);

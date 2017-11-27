@@ -33,6 +33,7 @@ def servers(request):
 flush_interval = 1
 port = %d
 udp_port = %d
+tdigest_compression = 200
 quantiles = 0.5, 0.9, 0.95, 0.99, 0.999
 
 [sink_stream_default]
@@ -196,10 +197,10 @@ class TestInteg(object):
         assert "timers.val.upper|99.000000" in out
         assert "timers.val.count|100" in out
         assert "timers.val.median|49.000000" in out
-        assert "timers.val.p90|90.000000" in out
-        assert "timers.val.p95|95.000000" in out
-        assert "timers.val.p99|99.000000" in out
-        assert "timers.val.p999|99.000000" in out
+        assert "timers.val.p90|89.500000" in out
+        assert "timers.val.p95|94.500000" in out
+        assert "timers.val.p99|98.500000" in out
+        assert "timers.val.p999|98.950000" in out
         assert "timers.val.rate|4950" in out
         assert "timers.val.sample_rate|100" in out
 
@@ -218,10 +219,10 @@ class TestInteg(object):
         assert "timers.noobs.upper|99.000000" in out
         assert "timers.noobs.count|100" in out
         assert "timers.noobs.median|49.000000" in out
-        assert "timers.noobs.p90|90.000000" in out
-        assert "timers.noobs.p95|95.000000" in out
-        assert "timers.noobs.p99|99.000000" in out
-        assert "timers.noobs.p999|99.000000" in out
+        assert "timers.noobs.p90|89.500000" in out
+        assert "timers.noobs.p95|94.500000" in out
+        assert "timers.noobs.p99|98.500000" in out
+        assert "timers.noobs.p999|98.950000" in out
         assert "timers.noobs.rate|4950" in out
         assert "timers.noobs.sample_rate|100" in out
 
@@ -397,10 +398,10 @@ class TestIntegUDP(object):
         assert "timers.noobs.upper|99.000000" in out
         assert "timers.noobs.count|100" in out
         assert "timers.noobs.median|49.000000" in out
-        assert "timers.noobs.p90|90.000000" in out
-        assert "timers.noobs.p95|95.000000" in out
-        assert "timers.noobs.p99|99.000000" in out
-        assert "timers.noobs.p999|99.000000" in out
+        assert "timers.noobs.p90|89.500000" in out
+        assert "timers.noobs.p95|94.500000" in out
+        assert "timers.noobs.p99|98.500000" in out
+        assert "timers.noobs.p999|98.950000" in out
         assert "timers.noobs.rate|4950" in out
         assert "timers.noobs.sample_rate|100" in out
 
