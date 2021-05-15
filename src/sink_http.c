@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <zstd.h>
 
 #include "lifoq.h"
 #include "metrics.h"
@@ -318,18 +319,29 @@ static int serialize_jobject(struct http_sink* sink,
 
     int post_len = 0;
     char* post_data = strbuf_get(post_buf, &post_len);
-
     strbuf_free(post_buf, false);
 
+    // Compres the body before enqueueing
+    size_t bound = ZSTD_compressBound(post_len);
+    void* compressed_post_data = malloc(bound * sizeof(char));
+    size_t compressed_size = ZSTD_compress(compressed_post_data, bound, post_data, post_len, 5);
+    if (ZSTD_isError(compressed_size)) {
+        syslog(LOG_ERR, "zts compression failed, aborting");
+        free(compressed_post_data);
+        free(post_data);
+        return 0;
+    }
+    free(post_data);
+
     struct http_queue_entry *qe = malloc(sizeof(struct http_queue_entry));
-    qe->data = post_data;
+    qe->data = compressed_post_data;
     qe->not_before_backoff = not_before;
 
-    int push_ret = lifoq_push(sink->queue, (void*)qe, post_len, true, false);
+    int push_ret = lifoq_push(sink->queue, (void*)qe, compressed_size, true, false);
     if (push_ret) {
         syslog(LOG_ERR, "HTTP Sink couldn't enqueue a %d size buffer - rejected code %d",
                post_len, push_ret);
-        free(post_data);
+        free(compressed_post_data);
         free(qe);
     }
 
@@ -594,6 +606,9 @@ static void* http_worker(void* arg) {
             sprintf(bearer_header, "Authorization: Bearer %s", s->oauth_bearer);
             headers = curl_slist_append(headers, bearer_header);
         }
+
+        /* Mention we are encoding this in zstd */
+        headers = curl_slist_append(headers, "Content-Encoding: zstd");
 
         /* Release the lock after all current state has been read */
         pthread_mutex_unlock(&s->sink_mutex);
